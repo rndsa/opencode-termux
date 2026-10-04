@@ -1,0 +1,505 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ==============================================================================
+# OpenCode Skills Manager - Modular Interactive TUI for Android/Termux
+# ==============================================================================
+
+set -e
+
+# Setup TTY
+if [ -t 0 ]; then
+    HAS_TTY=true
+elif [ -e /dev/tty ]; then
+    exec < /dev/tty
+    HAS_TTY=true
+else
+    HAS_TTY=false
+fi
+
+# Terminal Formatting
+ESC="\033"
+C_RESET="${ESC}[0m"
+C_BOLD="${ESC}[1m"
+C_DIM="${ESC}[2m"
+C_CYAN="${ESC}[1;36m"
+C_GREEN="${ESC}[1;32m"
+C_YELLOW="${ESC}[1;33m"
+C_MAGENTA="${ESC}[1;35m"
+C_RED="${ESC}[1;31m"
+C_WHITE="${ESC}[1;37m"
+
+hide_cursor() { printf "${ESC}[?25l"; }
+show_cursor() { printf "${ESC}[?25h"; }
+clear_screen() { printf "${ESC}[2J${ESC}[H"; }
+
+cleanup() {
+    show_cursor
+    printf "${C_RESET}\n"
+}
+trap cleanup EXIT INT TERM
+
+CMD_DIR_1="$HOME/.config/opencode/commands"
+CMD_DIR_2="$HOME/.opencode/commands"
+REF_DIR_1="$HOME/.config/opencode/references"
+REF_DIR_2="$HOME/.opencode/references"
+mkdir -p "$CMD_DIR_1" "$CMD_DIR_2" "$REF_DIR_1" "$REF_DIR_2"
+
+# Catalog of Available Skills (10 Core Skills)
+SKILL_KEYS=(
+    "sec-audit"
+    "logic-trainer"
+    "complex-logic"
+    "ui-ux"
+    "backend-api"
+    "perf-optimizer"
+    "code-refactor"
+    "code-reconstruct"
+    "git-workflow"
+    "db-optimizer"
+)
+
+SKILL_NAMES=(
+    "sec-audit       "
+    "logic-trainer   "
+    "complex-logic   "
+    "ui-ux           "
+    "backend-api     "
+    "perf-optimizer  "
+    "code-refactor   "
+    "code-reconstruct"
+    "git-workflow    "
+    "db-optimizer    "
+)
+
+SKILL_DESCS=(
+    "Code Security Audit, Surface Mapping & Logic Vulnerabilities"
+    "Interactive Socratic Logic Sparring Coach & Fallacy Dissector"
+    "C.A.R.V.E. Extreme Reasoning & Algorithmic Problem Solving"
+    "Modern Interface Architecture, Design Systems & Anti-Slop UI"
+    "Production Backend APIs, Idempotency, Queues & Auth Schemes"
+    "Concurrency Benchmarking, Latency & Low-Memory Optimization"
+    "Clean Architecture, Type Safety & Technical Debt Elimination"
+    "Code Reconstruction, AST Normalization & Deobfuscation"
+    "Conventional Commits Authoring & Release Changelog Automation"
+    "SQL Query Tuning, Execution Plans & Schema Architecture"
+)
+
+TOTAL_SKILLS=${#SKILL_KEYS[@]}
+CURRENT=0
+SELECTED=()
+
+# Detect current installation status
+for i in $(seq 0 $((TOTAL_SKILLS - 1))); do
+    key="${SKILL_KEYS[$i]}"
+    if [ -f "$CMD_DIR_1/$key.md" ] || [ -f "$CMD_DIR_2/$key.md" ]; then
+        SELECTED+=("1")
+    else
+        SELECTED+=("0")
+    fi
+done
+
+# If no skills are currently installed, default highlight all for convenience
+all_zero=true
+for s in "${SELECTED[@]}"; do
+    if [ "$s" -eq 1 ]; then
+        all_zero=false
+        break
+    fi
+done
+if [ "$all_zero" = true ]; then
+    for i in $(seq 0 $((TOTAL_SKILLS - 1))); do
+        SELECTED[$i]=1
+    done
+fi
+
+render_menu() {
+    clear_screen
+    echo -e "${C_CYAN}"
+    cat << "EOF"
+  ___                    ____          _      
+ / _ \ _ __   ___ _ __  / ___|___   __| | ___ 
+| | | | '_ \ / _ \ '_ \| |   / _ \ / _` |/ _ \
+| |_| | |_) |  __/ | | | |__| (_) | (_| |  __/
+ \___/| .__/ \___|_| |_|\____\___/ \__,_|\___|
+      |_|          Skills Manager
+EOF
+    echo -e "${C_RESET}"
+    echo -e "${C_BOLD}╭────────────────────────────────────────────────────────────────────────╮${C_RESET}"
+    echo -e "${C_BOLD}│${C_RESET} ${C_CYAN}${C_BOLD}OpenCode Modular Skills Manager${C_RESET}                                          ${C_BOLD}│${C_RESET}"
+    echo -e "${C_BOLD}│${C_RESET} ${C_DIM}Pilih skill yang ingin dipasang/dicopot (Multi-Select):${C_RESET}                 ${C_BOLD}│${C_RESET}"
+    echo -e "${C_BOLD}╰────────────────────────────────────────────────────────────────────────╯${C_RESET}"
+    echo ""
+    echo -e " ${C_DIM}Navigasi: [↑/↓] atau [j/k] | [Space] Toggle | [1-9,0] Langsung | [Enter] Simpan${C_RESET}"
+    echo ""
+
+    for i in $(seq 0 $((TOTAL_SKILLS - 1))); do
+        if [ "${SELECTED[$i]}" -eq 1 ]; then
+            CHECK="${C_GREEN}[●]${C_RESET}"
+        else
+            CHECK="${C_DIM}[○]${C_RESET}"
+        fi
+
+        if [ "$i" -eq "$CURRENT" ]; then
+            ARROW="${C_CYAN}${C_BOLD}❯${C_RESET}"
+            ITEM_NAME="${C_WHITE}${C_BOLD}${SKILL_NAMES[$i]}${C_RESET}"
+            DESC="${C_YELLOW}${SKILL_DESCS[$i]}${C_RESET}"
+        else
+            ARROW=" "
+            ITEM_NAME="${C_DIM}${SKILL_NAMES[$i]}${C_RESET}"
+            DESC="${C_DIM}${SKILL_DESCS[$i]}${C_RESET}"
+        fi
+
+        if [ "$i" -eq 9 ]; then
+            NUM=" 0"
+        else
+            NUM="$((i + 1))"
+            [ "$NUM" -lt 10 ] && NUM=" $NUM"
+        fi
+
+        echo -e "  $ARROW $CHECK ${C_BOLD}$NUM.${C_RESET} $ITEM_NAME ${C_DIM}·${C_RESET} $DESC"
+    done
+
+    echo ""
+    echo -e "  ${C_DIM}Shortcut:${C_RESET} ${C_CYAN}[a]${C_RESET} Pilih Semua  ${C_DIM}|${C_RESET} ${C_YELLOW}[n]${C_RESET} Kosongkan Semua  ${C_DIM}|${C_RESET} ${C_GREEN}[Enter]${C_RESET} Terapkan Perubahan  ${C_DIM}|${C_RESET} ${C_RED}[q]${C_RESET} Batal"
+    echo ""
+}
+
+prompt_tui() {
+    hide_cursor
+    while true; do
+        render_menu
+        IFS= read -rsn1 key
+
+        if [[ "$key" == "$ESC" ]]; then
+            read -rsn2 -t 0.1 rest || true
+            case "$rest" in
+                "[A") CURRENT=$(( (CURRENT - 1 + TOTAL_SKILLS) % TOTAL_SKILLS )) ;;
+                "[B") CURRENT=$(( (CURRENT + 1) % TOTAL_SKILLS )) ;;
+            esac
+            continue
+        fi
+
+        case "$key" in
+            "k"|"K") CURRENT=$(( (CURRENT - 1 + TOTAL_SKILLS) % TOTAL_SKILLS )) ;;
+            "j"|"J") CURRENT=$(( (CURRENT + 1) % TOTAL_SKILLS )) ;;
+            " ")
+                SELECTED[$CURRENT]=$(( 1 - SELECTED[$CURRENT] ))
+                ;;
+            "1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9")
+                idx=$((key - 1))
+                SELECTED[$idx]=$(( 1 - SELECTED[$idx] ))
+                CURRENT=$idx
+                ;;
+            "0")
+                SELECTED[9]=$(( 1 - SELECTED[9] ))
+                CURRENT=9
+                ;;
+            "a"|"A")
+                for idx in $(seq 0 $((TOTAL_SKILLS - 1))); do
+                    SELECTED[$idx]=1
+                done
+                ;;
+            "n"|"N")
+                for idx in $(seq 0 $((TOTAL_SKILLS - 1))); do
+                    SELECTED[$idx]=0
+                done
+                ;;
+            ""|$'\n'|$'\r')
+                break
+                ;;
+            "q"|"Q")
+                echo -e "\n${C_YELLOW}[!] Batal, tidak ada perubahan disimpan.${C_RESET}"
+                exit 0
+                ;;
+        esac
+    done
+    show_cursor
+}
+
+# Embedded Content Generators
+write_skill() {
+    local key="$1"
+    case "$key" in
+        "sec-audit")
+            cat << "SKILL_EOF"
+---
+description: Automated Code Security Evaluation, Attack Surface Mapping & Vulnerability Audit
+---
+
+You are an elite application security auditor and penetration testing specialist. When this command is executed, perform an exhaustive, rigorous security evaluation of the current project and its underlying codebase:
+
+### 1. Attack Surface Mapping & Inventory
+- Discover and catalog all public endpoints, routes, controllers, CLI arguments, and WebSocket handlers.
+- Trace the lifecycle of untrusted external input from ingress points down to database queries, shell executions, and file system operations.
+- Map third-party dependencies, API integrations, and data stores.
+
+### 2. Deep Vulnerability & Logic Analysis
+Examine the codebase for high-impact security weaknesses:
+- **Authentication & Authorization**: Verify token validation, cryptographic signature checks, session lifetime, privilege escalation vectors, and Broken Object Level Authorization (BOLA/IDOR).
+- **Injection & Memory Safety**: Inspect dynamic query generation, shell command invocation, template rendering, deserialization sinks, and potential memory corruptions.
+- **Data Exposure & Secrets**: Locate embedded credentials, hardcoded private keys, exposed staging endpoints, and sensitive data written to client bundles or unmasked telemetry.
+- **State & Concurrency Flaws**: Identify race conditions in state mutations, balance updates, token issuance, and bypasses in request throttling or rate limiting.
+- **Configuration & Headers**: Check CORS policies, CSP, cookie security attributes (Secure, HttpOnly, SameSite), and TLS/SSL configurations.
+
+### 3. Diagnostic Verification & Proof of Concept
+- For each detected weakness, outline the precise triggering condition and root cause.
+- Formulate minimal diagnostic test vectors or local simulation steps (e.g. mock request fixtures or unit test cases) to prove whether the issue is reachable and exploitable.
+- Clearly state the severity rating (Critical, High, Medium, Low) based on CVSS-aligned impact and exploitability.
+
+### 4. Remediation & Hardening Roadmap
+- Provide exact, production-ready code patches to mitigate each finding immediately.
+- Recommend defense-in-depth controls (e.g. input sanitization schemas, parameterized interfaces, least-privilege configurations) to prevent regression.
+SKILL_EOF
+            ;;
+
+        "logic-trainer")
+            cat << "SKILL_EOF"
+---
+description: Interactive Socratic Logic Trainer, Cognitive Reasoning Spar & Fallacy Dissector
+---
+
+You are an exacting, elite Logic Sparring Coach and Cognitive Trainer. When this command is invoked, turn this session into an interactive logic gymnasium:
+
+### 1. Training Regimen & Drill Categories
+Engage the user in progressive, round-based logic drills:
+- **Round A: Premise-Claim-Assumption Dissection**: Present an argument and require the user to isolate the Claim, Premise, Hidden Assumptions, and structural loopholes.
+- **Round B: Formal If-Then & Conditional Traps**: Test directional implications (P => Q), Modus Ponens vs. Affirming the Consequent, and Contraposition (~Q => ~P).
+- **Round C: Quantifiers & Negation**: Test exact negation of universal and existential statements ("All X", "Some Y", "No Z").
+- **Round D: Truth Puzzles (Knights & Knaves)**: Multi-agent deduction puzzles requiring invariant contradiction discovery.
+
+### 2. Scoring & Feedback Protocol
+- **Zero Fluff**: Keep questions and evaluations concise, direct, and mechanically rigorous.
+- **Pinpoint Diagnosis**: When the user answers, do not just say "correct" or "wrong". Identify the exact cognitive mechanism (e.g., "Intuition correct, but structural fallacy: Affirming the Consequent").
+- **Progressive Difficulty**: Dynamically scale up the complexity after every 2 consecutive valid answers.
+- **Format**:
+  - `[Skor & Evaluasi]`: Nilai mekanis (1-10) + bedah letak celah logika.
+  - `[Drill Berikutnya]`: 1 teka-teki / argumen berikutnya.
+SKILL_EOF
+            ;;
+
+        "complex-logic")
+            cat << "SKILL_EOF"
+---
+description: Deep Algorithmic Reasoning, Formal Logic & Multi-variable Problem Solving
+---
+
+You are an advanced cognitive reasoning engine and algorithmic specialist. When this command is invoked, tackle complex logical puzzles, difficult architecture trade-offs, state-machine synchronization, and multi-variable edge cases using the **C.A.R.V.E. Framework**:
+
+### 1. Compress (State Space Reduction)
+- Strip away superficial narratives and noise.
+- Formulate the exact mathematical or logical core: identify distinct Entities, Relations, Invariants, and Constraints.
+- Express the problem as formal propositions (P => Q), state graphs, or boolean algebra matrices.
+
+### 2. Anchor (Invariant Grounding)
+- Isolate the absolute constants and deterministic truths that cannot change under any permutation.
+- Establish baseline boundary conditions (base cases, null states, limits).
+
+### 3. Reverse (Backwards Induction)
+- Work backwards from the desired terminal state or target invariant to the initial condition.
+- Prune impossible branching paths immediately to avoid combinatorial explosion.
+
+### 4. Visualize Topology
+- Map decision trees, directed acyclic graphs (DAGs), cyclic dependencies, and concurrency channels.
+- Trace edge-case transitions and verify mutual exclusion / race-condition immunity.
+
+### 5. Execute with Precision
+- Synthesize the optimal solution with rigorous step-by-step mathematical proof or verified, battle-tested code.
+- Provide edge-case verification matrices proving validity across all possible permutations.
+SKILL_EOF
+            ;;
+
+        "ui-ux")
+            cat << "SKILL_EOF"
+---
+description: High-tier UI/UX Engineering, Design Systems & Modern Interface Architecture
+---
+
+You are a principal frontend engineer and UI/UX design architect specializing in distinctive, production-grade interfaces. When this command is executed, analyze or build frontend components and user experiences in the project:
+
+### 1. Aesthetic Direction & Anti-Template Principles
+- Reject cookie-cutter AI aesthetics, generic purple gradients, and bloated cards.
+- Implement crisp, high-contrast visual hierarchies: intentional typography, disciplined spacing (4px/8px grid), and subtle border-driven contrast (border-zinc-800 / glassmorphism accents).
+- Focus on purposeful micro-interactions, hover states, and smooth spring physics transitions.
+
+### 2. Design System Architecture
+- Enforce unified design tokens: color palettes (dark mode first with rich blacks and warm slates), semantic typography scales, and consistent radius tokens.
+- Architect modular, atomic component libraries (primitives, compositions, layouts).
+- Ensure 100% responsive fluid behavior across mobile (Android/iOS viewports), tablet, and desktop viewports.
+
+### 3. Usability, Performance & Accessibility (a11y)
+- Guarantee WCAG AA/AAA contrast ratios, keyboard accessibility (focus-visible), and ARIA attributes.
+- Optimize client-side render cycles: minimize layout shifts (CLS), prune unnecessary rerenders, and eliminate bundle slop.
+- Provide clean, production-ready code in modern frameworks (React/Next.js, Vue, Svelte, or native HTML/Tailwind/CSS).
+SKILL_EOF
+            ;;
+
+        "backend-api")
+            cat << "SKILL_EOF"
+---
+description: Production-grade Backend Engineering, API Contracts, Idempotency & Queues
+---
+
+You are a principal backend systems architect. When this command is executed, design or review backend services, API interfaces, and data pipelines:
+
+### 1. API Contract & Ergonomics
+- Design clean RESTful or RPC/GraphQL schemas with predictable naming, strict status code semantics, and standardized error envelopes.
+- Implement robust input validation using schema-based validators (Zod, Pydantic, Joi).
+
+### 2. Idempotency & Fault Tolerance
+- Enforce idempotency keys on non-idempotent operations (payments, mutations, transactional events).
+- Implement resilient retry policies with exponential backoff and jitter.
+- Design background task pipelines with dead-letter queues (DLQ) and stateful transaction logging.
+
+### 3. Auth, Rate Limiting & Defense
+- Verify JWT verification, token rotation, and fine-grained access control (RBAC / ABAC).
+- Implement multi-tier rate limiting (IP-based, user-token bucket, endpoint quotas).
+SKILL_EOF
+            ;;
+
+        "perf-optimizer")
+            cat << "SKILL_EOF"
+---
+description: High-Concurrency Profiling, Latency Reduction & Memory Optimization
+---
+
+You are a systems performance engineer and runtime optimization expert. When this command is triggered, profile and optimize the target codebase for peak throughput and minimum resource utilization:
+
+### 1. Bottleneck & Latency Profiling
+- Pinpoint event loop blocking, blocking I/O calls, inefficient regex backtracking, and un-indexed queries.
+- Analyze algorithmic time and space complexity: convert O(N^2) patterns to O(N) or O(1) lookup structures.
+
+### 2. Memory & Resource Footprint
+- Detect memory leaks, cyclic references, unbounded buffer allocations, and excessive GC pressure.
+- Streamline payload parsing: implement zero-copy buffering, stream processing, and selective field deserialization.
+
+### 3. Concurrency & Throughput Architecture
+- Benchmark parallel execution models: thread pooling, worker pools, async task queuing, and backpressure mechanisms.
+- Eliminate locking contention: transition to atomic operations, lock-free queues, or sharded state stores where appropriate.
+
+### 4. Measurable Output
+- Output concrete benchmarks (before vs. after estimates).
+- Deliver concise, production-ready refactors focusing exclusively on performance-critical hot paths.
+SKILL_EOF
+            ;;
+
+        "code-refactor")
+            cat << "SKILL_EOF"
+---
+description: Clean Architecture, Idiomatic Refactoring & Technical Debt Elimination
+---
+
+You are a senior software architect focused on clean code, modular architecture, and sustainable codebases. When this command is executed, refactor and restructure the target files:
+
+### 1. Code Smells & Anti-Pattern Detection
+- Eliminate God classes, spaghetti conditionals, excessive nesting, mutation side-effects, and tight coupling.
+- Enforce Single Responsibility (SRP) and Separation of Concerns (SoC) across domain layers.
+
+### 2. Modular & Type-Safe Architecture
+- Organize codebase into decoupled modules with explicit, strongly-typed interfaces.
+- Replace magic numbers and strings with domain enumerations and immutable constants.
+- Implement robust error-handling pipelines with custom domain errors rather than swallowing exceptions.
+
+### 3. Testability & Maintainability
+- Isolate pure business logic from side-effectful I/O boundaries to enable trivial unit testing.
+- Deliver surgical, backward-compatible refactoring diffs with zero degradation of existing functionality.
+SKILL_EOF
+            ;;
+
+        "code-reconstruct")
+            cat << "SKILL_EOF"
+---
+description: Code Reconstruction, AST Normalization & Deobfuscation Analysis
+---
+
+You are a reverse engineering and static code reconstruction specialist. When this command is executed, analyze and normalize obfuscated, minified, or packed codebases:
+
+### 1. Structural Normalization
+- De-minify variable names, function handles, and control flow flattening into idiomatic, readable domain representations.
+- Reconstruct Abstract Syntax Trees (AST): unfold switch-dispatch loops, dead-code branches, and encoded string arrays.
+
+### 2. Protocol & State Decoupling
+- Trace dynamic reflection calls, eval sinks, and encrypted runtime payloads.
+- Identify underlying network protocols, payload serialization (JSON, Protobuf, custom byte streams), and internal state machines.
+
+### 3. Deliverables
+- Output clean, fully unminified source files with clear architectural comments and symbol mappings.
+SKILL_EOF
+            ;;
+
+        "git-workflow")
+            cat << "SKILL_EOF"
+---
+description: Automated Git Operations, Conventional Commits & Release Changelog Generation
+---
+
+You are a release engineering and Git operations automation expert. When this command is executed, orchestrate version control workflows on the project:
+
+### 1. Diff Inspection & Semantic Commit Authoring
+- Analyze staged and unstaged git diff changes across the working tree.
+- Partition changes into atomic, logical commits adhering to the Conventional Commits specification (feat:, fix:, refactor:, perf:, chore:).
+- Author concise commit messages with high-signal context explaining the "why" behind changes.
+
+### 2. Changelog & Version Bumping
+- Aggregate commit logs between release tags into categorized, user-facing CHANGELOG markdown documents.
+- Recommend semantic version bumps (SemVer: Major, Minor, Patch) based on breaking changes and API contract evolution.
+SKILL_EOF
+            ;;
+
+        "db-optimizer")
+            cat << "SKILL_EOF"
+---
+description: Database Query Optimization, Index Tuning & Schema Architecture
+---
+
+You are a database administrator and SQL performance tuning specialist. When this command is executed, profile and optimize database layers in the project:
+
+### 1. Query Execution & Cost Analysis
+- Analyze slow query patterns, N+1 query antipatterns in ORM frameworks, and missing eager loads.
+- Evaluate execution plans (EXPLAIN ANALYZE), identify sequential table scans, and formulate optimal composite indexes.
+
+### 2. Schema Architecture & Data Modeling
+- Review normalization (3NF) vs. intentional denormalization tradeoffs for read-heavy workloads.
+- Check lock contention: deadlock risks in concurrent transactions, isolation level settings, and row-level locking vs table locking.
+
+### 3. Migration & Hardening
+- Provide safe zero-downtime schema migration steps (e.g., adding non-blocking concurrent indexes, nullable column rollouts).
+SKILL_EOF
+            ;;
+    esac
+}
+
+# Run TUI
+if [ "$HAS_TTY" = true ]; then
+    prompt_tui
+fi
+
+clear_screen
+echo -e "${C_CYAN}${C_BOLD}[*] Memproses sinkronisasi skill OpenCode...${C_RESET}\n"
+
+INSTALLED_COUNT=0
+REMOVED_COUNT=0
+
+for i in $(seq 0 $((TOTAL_SKILLS - 1))); do
+    key="${SKILL_KEYS[$i]}"
+    target1="$CMD_DIR_1/$key.md"
+    target2="$CMD_DIR_2/$key.md"
+
+    if [ "${SELECTED[$i]}" -eq 1 ]; then
+        # Install or refresh skill
+        write_skill "$key" > "$target1"
+        cp "$target1" "$target2"
+        echo -e "  ${C_GREEN}✓${C_RESET} Terpasang:  ${C_CYAN}user:$key${C_RESET}"
+        INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
+    else
+        # Remove if unselected
+        if [ -f "$target1" ] || [ -f "$target2" ]; then
+            rm -f "$target1" "$target2"
+            echo -e "  ${C_YELLOW}✗${C_RESET} Dihapus:    ${C_DIM}user:$key${C_RESET}"
+            REMOVED_COUNT=$((REMOVED_COUNT + 1))
+        fi
+    fi
+done
+
+echo ""
+echo -e "${C_GREEN}${C_BOLD}[✓] Sinkronisasi selesai!${C_RESET}"
+echo -e "    Total aktif: ${C_CYAN}$INSTALLED_COUNT${C_RESET} skill | Dicopot: ${C_YELLOW}$REMOVED_COUNT${C_RESET} skill."
+echo -e "    Buka OpenCode (${C_GREEN}opencode${C_RESET}) lalu tekan ${C_CYAN}Ctrl + K${C_RESET} untuk menggunakannya.\n"
