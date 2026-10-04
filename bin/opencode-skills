@@ -619,4 +619,4 @@ JS
 echo ""
 echo -e "  ${C_GREEN}✓ Selesai.${C_RESET} ${C_WHITE}$INSTALLED_COUNT skill aktif.${C_RESET}"
 echo -e "  ${C_GREEN}● AGENTS.md:${C_RESET} ${C_DIM}Terkunci sebagai soul prompt di setiap request AI.${C_RESET}"
-echo -e "  ${C_DIM}Ketik ${C_CYAN}opencode${C_DIM} lalu tekan ${C_WHITE}Ctrl + K${C_DIM} untuk memanggil skill.${C_RESET}\n"
+echo -e "  ${C_DIM}Ketik ${C_CYAN}opencode${C_DIM} lalu ketik ${C_WHITE}/${C_DIM} atau tekan ${C_WHITE}Ctrl+P / Ctrl+K${C_DIM} untuk memilih skill.${C_RESET}\n"

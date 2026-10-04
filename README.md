@@ -86,4 +86,24 @@ cd ~/my-project
 opencode
 ```
 
-Tekan **`Ctrl + K`** di dalam antarmuka OpenCode untuk memanggil skill yang telah diaktifkan.
+Di dalam antarmuka OpenCode:
+- Ketik tanda garis miring **`/`** (atau tekan **`Ctrl + P`** / **`Ctrl + K`**) pada kolom input chat untuk memunculkan daftar skill dan command yang tersedia (misal: `/sec-audit` atau `/logic-trainer`).
+
+---
+
+## 🧠 Di Mana File `AGENTS.md` (Soul Prompt) Sebenarnya Digunakan?
+
+File **`AGENTS.md`** (atau `agent.md`) adalah **System Prompt / Instruksi Induk (Soul)** bagi OpenCode.
+
+### 1. Lokasi File
+- **Global**: `~/.config/opencode/AGENTS.md` (berlaku untuk semua project di Termux Anda).
+- **Per-Project**: `AGENTS.md` di folder project Anda (opsional, jika ingin aturan khusus per repo).
+
+### 2. Bagaimana OpenCode Memakainya?
+- Setiap kali Anda mengetik `opencode` dan mengirim pesan, runtime OpenCode secara otomatis memuat `AGENTS.md`.
+- Konten ini disisipkan ke lapisan paling awal (*privileged system context*) pada setiap panggilan API ke model AI (Claude, GPT, Gemini).
+- Model AI membaca file ini sebagai kepribadian dan aturan permanen yang **wajib dipatuhi** di seluruh proses coding, analisis, dan eksekusi tools.
+- Anda dapat mengedit persona ini kapan saja menggunakan editor terminal:
+  ```bash
+  nano ~/.config/opencode/AGENTS.md
+  ```
