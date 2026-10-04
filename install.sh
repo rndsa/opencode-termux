@@ -63,7 +63,17 @@ EOF
 fi
 ln -sf "$CONFIG_DIR/AGENTS.md" "$CONFIG_DIR/agent.md" 2>/dev/null || true
 
-# 2. Suntikkan AGENTS.md ke opencode.json biar dibaca di setiap turn
+# 3. Konfigurasi tui.json agar Ctrl+K dan Ctrl+P membuka command palette
+TUI_JSON="$CONFIG_DIR/tui.json"
+cat << 'EOF' > "$TUI_JSON"
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "keybinds": {
+    "leader": "ctrl+x",
+    "command_list": "ctrl+k,ctrl+p"
+  }
+}
+EOF
 python3 - << 'PY' 2>/dev/null || node - << 'JS' 2>/dev/null || true
 import json, os
 path = os.path.expanduser("~/.config/opencode/opencode.json")

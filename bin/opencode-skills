@@ -569,7 +569,15 @@ Your operating principles:
 - Never substitute stubs, placeholders, or pseudocode for working implementations.
 EOF
 fi
-ln -sf "$CFG_DIR/AGENTS.md" "$CFG_DIR/agent.md" 2>/dev/null || true
+cat << 'EOF' > "$CFG_DIR/tui.json"
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "keybinds": {
+    "leader": "ctrl+x",
+    "command_list": "ctrl+k,ctrl+p"
+  }
+}
+EOF
 
 python3 - << 'PY' 2>/dev/null || node - << 'JS' 2>/dev/null || true
 import json, os
