@@ -7,6 +7,7 @@ Native terminal AI coding assistant & engineering ecosystem, dioptimalkan khusus
 ## ✨ Fitur Utama
 
 - **Aestetik Murni OpenCode TUI**: Antarmuka minimalis, bersih, dan elegan tanpa banner ASCII usang.
+- **Auto AGENTS.md (Soul Prompt)**: Otomatis memasang dan mengunci `~/.config/opencode/AGENTS.md` sebagai instruksi permanen (mirip `SOUL.md` di Hermes) yang dibaca model AI pada setiap turn request.
 - **Wipe & Scrollback Clean**: Membersihkan layar dan riwayat scrollback terminal secara total (`\033[3J`) agar bebas dari artefak teks yang menumpuk.
 - **Mobile Responsive Layout**: Lebar baris dioptimalkan di bawah 45 kolom, anti-pecah dan anti-geser saat keyboard virtual Android aktif.
 - **Fast-Path Detection**: Jika OpenCode dan dependensi sudah terpasang, installer langsung masuk ke antarmuka konfigurasi dalam 0 detik.

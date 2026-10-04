@@ -549,6 +549,66 @@ for i in $(seq 0 $((TOTAL_SKILLS - 1))); do
     fi
 done
 
+# Ensure AGENTS.md is present & injected into opencode.json
+if [ ! -f "$CFG_DIR/AGENTS.md" ]; then
+    cat << 'EOF' > "$CFG_DIR/AGENTS.md"
+# Workspace Identity & Operating Soul
+
+You are an expert AI software engineer, systems architect, and personal assistant.
+Your operating principles:
+
+## 1. Tone & Persona
+- Direct, concise, technical, and outcome-oriented.
+- Zero fluff, no unsolicited preambles, and no conversational filler ("Certainly!", "I hope this helps!").
+- Lead with the solution, followed by necessary mechanics and architecture.
+
+## 2. Engineering Standards
+- Write clean, modular, and type-safe code.
+- Prioritize high performance, zero-copy memory patterns, and minimal latency.
+- Handle edge cases, runtime exceptions, and input validation proactively.
+- Never substitute stubs, placeholders, or pseudocode for working implementations.
+EOF
+fi
+ln -sf "$CFG_DIR/AGENTS.md" "$CFG_DIR/agent.md" 2>/dev/null || true
+
+python3 - << 'PY' 2>/dev/null || node - << 'JS' 2>/dev/null || true
+import json, os
+path = os.path.expanduser("~/.config/opencode/opencode.json")
+cfg = {}
+if os.path.exists(path):
+    try:
+        with open(path, "r") as f:
+            cfg = json.load(f)
+    except: pass
+cfg["$schema"] = cfg.get("$schema", "https://opencode.ai/config.json")
+instructions = cfg.get("instructions", [])
+rule = "{file:~/.config/opencode/AGENTS.md}"
+if rule not in instructions:
+    instructions.insert(0, rule)
+cfg["instructions"] = instructions
+agent = cfg.get("agent", {})
+build = agent.get("build", {})
+build["prompt"] = rule
+agent["build"] = build
+cfg["agent"] = agent
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+PY
+const fs = require("fs");
+const path = process.env.HOME + "/.config/opencode/opencode.json";
+let cfg = {};
+try { cfg = JSON.parse(fs.readFileSync(path, "utf8")); } catch(e){}
+cfg.$schema = cfg.$schema || "https://opencode.ai/config.json";
+cfg.instructions = cfg.instructions || [];
+const rule = "{file:~/.config/opencode/AGENTS.md}";
+if (!cfg.instructions.includes(rule)) { cfg.instructions.unshift(rule); }
+cfg.agent = cfg.agent || {};
+cfg.agent.build = cfg.agent.build || {};
+cfg.agent.build.prompt = rule;
+fs.writeFileSync(path, JSON.stringify(cfg, null, 2));
+JS
+
 echo ""
 echo -e "  ${C_GREEN}✓ Selesai.${C_RESET} ${C_WHITE}$INSTALLED_COUNT skill aktif.${C_RESET}"
+echo -e "  ${C_GREEN}● AGENTS.md:${C_RESET} ${C_DIM}Terkunci sebagai soul prompt di setiap request AI.${C_RESET}"
 echo -e "  ${C_DIM}Ketik ${C_CYAN}opencode${C_DIM} lalu tekan ${C_WHITE}Ctrl + K${C_DIM} untuk memanggil skill.${C_RESET}\n"

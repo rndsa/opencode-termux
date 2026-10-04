@@ -31,8 +31,75 @@ C_WHITE="${ESC}[38;5;255m"
 
 PREFIX_BIN="/data/data/com.termux/files/usr/bin"
 SKILLS_BIN="$PREFIX_BIN/opencode-skills"
-REF_DIR="$HOME/.config/opencode/references"
-mkdir -p "$REF_DIR"
+CONFIG_DIR="$HOME/.config/opencode"
+REF_DIR="$CONFIG_DIR/references"
+mkdir -p "$CONFIG_DIR" "$REF_DIR"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+
+# 1. Pasang AGENTS.md (Soul Prompt bawaan mirip SOUL.md Hermes)
+if [ ! -f "$CONFIG_DIR/AGENTS.md" ]; then
+    if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/AGENTS.md" ]; then
+        cp "$SCRIPT_DIR/AGENTS.md" "$CONFIG_DIR/AGENTS.md"
+    else
+        cat << 'EOF' > "$CONFIG_DIR/AGENTS.md"
+# Workspace Identity & Operating Soul
+
+You are an expert AI software engineer, systems architect, and personal assistant.
+Your operating principles:
+
+## 1. Tone & Persona
+- Direct, concise, technical, and outcome-oriented.
+- Zero fluff, no unsolicited preambles, and no conversational filler ("Certainly!", "I hope this helps!").
+- Lead with the solution, followed by necessary mechanics and architecture.
+
+## 2. Engineering Standards
+- Write clean, modular, and type-safe code.
+- Prioritize high performance, zero-copy memory patterns, and minimal latency.
+- Handle edge cases, runtime exceptions, and input validation proactively.
+- Never substitute stubs, placeholders, or pseudocode for working implementations.
+EOF
+    fi
+fi
+ln -sf "$CONFIG_DIR/AGENTS.md" "$CONFIG_DIR/agent.md" 2>/dev/null || true
+
+# 2. Suntikkan AGENTS.md ke opencode.json biar dibaca di setiap turn
+python3 - << 'PY' 2>/dev/null || node - << 'JS' 2>/dev/null || true
+import json, os
+path = os.path.expanduser("~/.config/opencode/opencode.json")
+cfg = {}
+if os.path.exists(path):
+    try:
+        with open(path, "r") as f:
+            cfg = json.load(f)
+    except: pass
+cfg["$schema"] = cfg.get("$schema", "https://opencode.ai/config.json")
+instructions = cfg.get("instructions", [])
+rule = "{file:~/.config/opencode/AGENTS.md}"
+if rule not in instructions:
+    instructions.insert(0, rule)
+cfg["instructions"] = instructions
+agent = cfg.get("agent", {})
+build = agent.get("build", {})
+build["prompt"] = rule
+agent["build"] = build
+cfg["agent"] = agent
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+PY
+const fs = require("fs");
+const path = process.env.HOME + "/.config/opencode/opencode.json";
+let cfg = {};
+try { cfg = JSON.parse(fs.readFileSync(path, "utf8")); } catch(e){}
+cfg.$schema = cfg.$schema || "https://opencode.ai/config.json";
+cfg.instructions = cfg.instructions || [];
+const rule = "{file:~/.config/opencode/AGENTS.md}";
+if (!cfg.instructions.includes(rule)) { cfg.instructions.unshift(rule); }
+cfg.agent = cfg.agent || {};
+cfg.agent.build = cfg.agent.build || {};
+cfg.agent.build.prompt = rule;
+fs.writeFileSync(path, JSON.stringify(cfg, null, 2));
+JS
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
 
