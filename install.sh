@@ -1,22 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ==============================================================================
-# OpenCode for Termux - Automated Installer & Modular Setup
+# OpenCode for Termux - Fast Intelligent Installer & Mobile Setup
 # ==============================================================================
 
 set -e
-
-# If user just wants to manage skills:
-if [ "$1" == "--skills" ] || [ "$1" == "-s" ]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    if [ -f "$SCRIPT_DIR/bin/opencode-skills" ]; then
-        exec "$SCRIPT_DIR/bin/opencode-skills"
-    elif command -v opencode-skills > /dev/null 2>&1; then
-        exec opencode-skills
-    else
-        echo "Error: opencode-skills tidak ditemukan."
-        exit 1
-    fi
-fi
 
 # Setup TTY
 if [ -t 0 ]; then
@@ -28,7 +15,7 @@ else
     HAS_TTY=false
 fi
 
-# Colors
+# ANSI Colors
 ESC="\033"
 C_RESET="${ESC}[0m"
 C_BOLD="${ESC}[1m"
@@ -39,90 +26,90 @@ C_YELLOW="${ESC}[1;33m"
 C_RED="${ESC}[1;31m"
 C_WHITE="${ESC}[1;37m"
 
-clear_screen() { printf "${ESC}[2J${ESC}[H"; }
-
-clear_screen
-echo -e "${C_CYAN}"
-cat << "EOF"
-  ___                    ____          _      
- / _ \ _ __   ___ _ __  / ___|___   __| | ___ 
-| | | | '_ \ / _ \ '_ \| |   / _ \ / _` |/ _ \
-| |_| | |_) |  __/ | | | |__| (_) | (_| |  __/
- \___/| .__/ \___|_| |_|\____\___/ \__,_|\___|
-      |_|            Termux Edition
-EOF
-echo -e "${C_RESET}"
-
-ARCH=$(uname -m)
-if [ "$ARCH" != "aarch64" ]; then
-    echo -e "${C_RED}[!] Error: Arsitektur perangkat ($ARCH) tidak didukung.${C_RESET}"
-    echo -e "OpenCode Termux membutuhkan CPU 64-bit (aarch64)."
-    exit 1
-fi
-
-echo -e "${C_CYAN}[1/4]${C_RESET} Memeriksa dependensi sistem (curl, ripgrep)..."
-MISSING_PKGS=()
-command -v curl >/dev/null 2>&1 || MISSING_PKGS+=("curl")
-command -v rg >/dev/null 2>&1 || MISSING_PKGS+=("ripgrep")
-
-if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
-    echo -e "${C_DIM}    Memasang dependensi: ${MISSING_PKGS[*]}...${C_RESET}"
-    pkg install -y -o Dpkg::Options::="--force-confold" "${MISSING_PKGS[@]}" || true
-else
-    echo -e "${C_GREEN}    ✓ Dependensi sudah lengkap, lewati tahap ini.${C_RESET}"
-fi
-
-DEB_URL="https://github.com/Konaimav2/opencode-termux/releases/download/v2.0.19-android-rc4/opencode_2.0.19_aarch64.deb"
-DEB_FILE="/data/data/com.termux/files/usr/tmp/opencode_installer.deb"
-
-echo -e "${C_CYAN}[2/4]${C_RESET} Mengunduh core binary OpenCode (v2.0.19 aarch64)..."
-mkdir -p "$(dirname "$DEB_FILE")"
-curl -fL --progress-bar "$DEB_URL" -o "$DEB_FILE"
-
-echo -e "${C_CYAN}[3/4]${C_RESET} Memasang core binary ke sistem Termux..."
-dpkg -i "$DEB_FILE" > /dev/null
-rm -f "$DEB_FILE"
-
-echo -e "${C_CYAN}[4/4]${C_RESET} Memasang manajer skill independen dan referensi modular..."
 PREFIX_BIN="/data/data/com.termux/files/usr/bin"
-LOCAL_BIN="$HOME/.local/bin"
+SKILLS_BIN="$PREFIX_BIN/opencode-skills"
 REF_DIR="$HOME/.config/opencode/references"
 mkdir -p "$REF_DIR"
 
+# 1. Check if OpenCode and dependencies already exist
+HAS_CURL=true
+HAS_RG=true
+HAS_OPENCODE=true
+
+command -v curl >/dev/null 2>&1 || HAS_CURL=false
+command -v rg >/dev/null 2>&1 || HAS_RG=false
+command -v opencode >/dev/null 2>&1 || HAS_OPENCODE=false
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+
+# Sync references and opencode-skills if present locally
 if [ -n "$SCRIPT_DIR" ] && [ -d "$SCRIPT_DIR/references" ]; then
     cp -r "$SCRIPT_DIR/references/"* "$REF_DIR/" 2>/dev/null || true
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
-SKILLS_SRC=""
 if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/bin/opencode-skills" ]; then
-    SKILLS_SRC="$SCRIPT_DIR/bin/opencode-skills"
+    cp "$SCRIPT_DIR/bin/opencode-skills" "$SKILLS_BIN" 2>/dev/null || true
+    chmod +x "$SKILLS_BIN" 2>/dev/null || true
+elif [ ! -f "$SKILLS_BIN" ]; then
+    curl -fsSL "https://raw.githubusercontent.com/rndsa/opencode-termux/main/bin/opencode-skills" -o "$SKILLS_BIN" 2>/dev/null || true
+    chmod +x "$SKILLS_BIN" 2>/dev/null || true
 fi
 
-# Install opencode-skills binary to PATH
-TARGET_BIN=""
-if [ -d "$PREFIX_BIN" ] && [ -w "$PREFIX_BIN" ]; then
-    TARGET_BIN="$PREFIX_BIN/opencode-skills"
+# FAST PATH: If already fully installed, jump straight to skill selector!
+if [ "$HAS_CURL" = true ] && [ "$HAS_RG" = true ] && [ "$HAS_OPENCODE" = true ]; then
+    if [ -f "$SKILLS_BIN" ]; then
+        exec "$SKILLS_BIN"
+    fi
+fi
+
+# SLOW PATH: First-time setup / Missing dependencies
+clear
+echo -e "${C_CYAN}┌── OpenCode Termux Installer ──────────┐${C_RESET}"
+echo -e "${C_CYAN}│${C_RESET} ${C_BOLD}Menyiapkan runtime dan dependensi...${C_RESET}   ${C_CYAN}│${C_RESET}"
+echo -e "${C_CYAN}└───────────────────────────────────────┘${C_RESET}\n"
+
+# Verify CPU Architecture
+ARCH=$(uname -m)
+if [ "$ARCH" != "aarch64" ]; then
+    echo -e "${C_RED}[!] Error: CPU ($ARCH) bukan 64-bit (aarch64).${C_RESET}"
+    exit 1
+fi
+
+# Install only missing packages
+MISSING_PKGS=()
+[ "$HAS_CURL" = false ] && MISSING_PKGS+=("curl")
+[ "$HAS_RG" = false ] && MISSING_PKGS+=("ripgrep")
+
+if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+    echo -e "${C_CYAN}[1/3]${C_RESET} Memasang paket: ${MISSING_PKGS[*]}..."
+    pkg install -y -o Dpkg::Options::="--force-confold" "${MISSING_PKGS[@]}" >/dev/null 2>&1 || true
 else
-    mkdir -p "$LOCAL_BIN"
-    TARGET_BIN="$LOCAL_BIN/opencode-skills"
+    echo -e "${C_GREEN}[1/3]${C_RESET} Dependensi curl & ripgrep: ${C_GREEN}OK${C_RESET}"
 fi
 
-if [ -n "$SKILLS_SRC" ]; then
-    cp "$SKILLS_SRC" "$TARGET_BIN"
+# Install OpenCode binary if missing
+if [ "$HAS_OPENCODE" = false ]; then
+    DEB_URL="https://github.com/Konaimav2/opencode-termux/releases/download/v2.0.19-android-rc4/opencode_2.0.19_aarch64.deb"
+    DEB_FILE="/data/data/com.termux/files/usr/tmp/opencode_installer.deb"
+
+    echo -e "${C_CYAN}[2/3]${C_RESET} Mengunduh core OpenCode (v2.0.19 aarch64)..."
+    mkdir -p "$(dirname "$DEB_FILE")"
+    curl -fL --progress-bar "$DEB_URL" -o "$DEB_FILE"
+
+    echo -e "${C_CYAN}[3/3]${C_RESET} Memasang OpenCode ke Termux..."
+    dpkg -i "$DEB_FILE" > /dev/null 2>&1
+    rm -f "$DEB_FILE"
 else
-    # Fetch directly if running via curl pipe
-    curl -fsSL "https://raw.githubusercontent.com/rndsa/opencode-termux/main/bin/opencode-skills" -o "$TARGET_BIN"
+    echo -e "${C_GREEN}[2/3]${C_RESET} Core OpenCode: ${C_GREEN}Sudah terpasang${C_RESET}"
 fi
-chmod +x "$TARGET_BIN"
 
-echo ""
-echo -e "${C_GREEN}${C_BOLD}[✓] Core OpenCode berhasil terpasang!${C_RESET}"
-echo -e "    Tools manajer skill telah terpasang di: ${C_CYAN}$TARGET_BIN${C_RESET}"
-echo ""
-echo -e "${C_DIM}Membuka antarmuka pemilihan skill internal... (Tekan sembarang tombol)${C_RESET}"
+# Ensure skills manager is in PATH
+if [ ! -f "$SKILLS_BIN" ]; then
+    curl -fsSL "https://raw.githubusercontent.com/rndsa/opencode-termux/main/bin/opencode-skills" -o "$SKILLS_BIN"
+    chmod +x "$SKILLS_BIN"
+fi
+
+echo -e "\n${C_GREEN}${C_BOLD}[✓] Instalasi selesai! Membuka menu pemilihan skill...${C_RESET}"
 sleep 1
 
-# Launch skill manager immediately
-exec "$TARGET_BIN"
+exec "$SKILLS_BIN"
