@@ -1,29 +1,21 @@
 # OpenCode for Termux
 
-Native terminal AI coding assistant & engineering ecosystem, dioptimalkan khusus untuk arsitektur Android / Termux (`aarch64`). Dilengkapi manajer skill & model selector interaktif yang mobile-friendly.
-
-```
-  ___                    ____          _      
- / _ \ _ __   ___ _ __  / ___|___   __| | ___ 
-| | | | '_ \ / _ \ '_ \| |   / _ \ / _` |/ _ \
-| |_| | |_) |  __/ | | | |__| (_) | (_| |  __/
- \___/| .__/ \___|_| |_|\____\___/ \__,_|\___|
-      |_|            Termux Edition
-```
+Native terminal AI coding assistant & engineering ecosystem, dioptimalkan khusus untuk Android / Termux (`aarch64`). Dilengkapi manajer skill & model setup dengan estetika murni OpenCode TUI.
 
 ---
 
 ## ✨ Fitur Utama
 
-- **Fast Intelligent Installer**: Mendeteksi dependensi otomatis. Jika OpenCode dan dependensi sudah terpasang, installer langsung masuk ke mode pemilihan skill dalam 0 detik tanpa proses berulang.
-- **Mobile-First Compact TUI**: Didesain khusus untuk layar HP sempit (portrait ~45 kolom). Tidak ada teks terpotong, tidak ada baris ganda, dan tahan saat keyboard virtual terbuka.
-- **Interactive Model Setup Wizard**: Atur model & provider AI (Claude 3.7, GPT-4o, Gemini 2.5, OpenRouter, atau 9router/proxy kustom) langsung lewat menu dengan tombol `[m]`.
-- **Modular Multi-Select Skills**: Pilih skill yang ingin dipasang (semua, satuan, atau kosongkan) menggunakan tombol angka `1`–`9`, `0`, atau `Space`.
-- **10 Core Engineering Skills & References**: Dilengkapi dokumen referensi teknis mendalam di `~/.config/opencode/references/` yang otomatis dibaca oleh AI.
+- **Aestetik Murni OpenCode TUI**: Antarmuka minimalis, bersih, dan elegan tanpa banner ASCII usang.
+- **Wipe & Scrollback Clean**: Membersihkan layar dan riwayat scrollback terminal secara total (`\033[3J`) agar bebas dari artefak teks yang menumpuk.
+- **Mobile Responsive Layout**: Lebar baris dioptimalkan di bawah 45 kolom, anti-pecah dan anti-geser saat keyboard virtual Android aktif.
+- **Fast-Path Detection**: Jika OpenCode dan dependensi sudah terpasang, installer langsung masuk ke antarmuka konfigurasi dalam 0 detik.
+- **Interactive Model Setup Wizard**: Atur provider LLM (Claude 3.7, GPT-4o, Gemini 2.5, OpenRouter, atau 9router/proxy kustom) langsung lewat menu dengan tombol `[m]`.
+- **10 Core Engineering Skills & References**: Koleksi skill modular didukung dokumen referensi teknis mendalam di `~/.config/opencode/references/`.
 
 ---
 
-## ⚡ Instalasi Cepat (One-Line Setup)
+## ⚡ Instalasi Cepat
 
 Jalankan perintah berikut di terminal Termux Anda:
 
@@ -31,93 +23,66 @@ Jalankan perintah berikut di terminal Termux Anda:
 bash <(curl -fsSL https://raw.githubusercontent.com/rndsa/opencode-termux/main/install.sh)
 ```
 
-Jika OpenCode sudah terpasang, perintah di atas langsung membuka **Skills & Model Manager**.
-
 ---
 
-## 🎛️ Kelola Skill & Model Kapan Saja (`opencode-skills`)
+## 🎛️ Kelola Skill & Model (`opencode-skills`)
 
-Setelah terpasang, cukup ketik:
+Setelah instalasi, cukup ketik:
 
 ```bash
 opencode-skills
 ```
 
-Antarmuka mobile yang ringkas dan rapi akan muncul di layar:
+Tampilan TUI OpenCode yang bersih akan muncul:
 
 ```
-┌── OpenCode Mobile Manager ────────────┐
-│ [1-9,0] Toggle · [a] Semua · [Enter] OK│
-└── Navigasi: [↑/↓] atau [j/k] ─────────┘
- ❯ [●] 1. sec-audit        (Audit Sec)
-   [●] 2. logic-trainer    (Trainer)
-   [●] 3. complex-logic    (C.A.R.V.E)
-   [●] 4. ui-ux            (Design UI)
-   [●] 5. backend-api      (REST/API)
-   [●] 6. perf-optimizer   (Performa)
-   [●] 7. code-refactor    (Clean Code)
-   [●] 8. code-reconstruct (Deobfuscate)
-   [●] 9. git-workflow     (Auto Git)
-   [●] 0. db-optimizer     (SQL/Index)
-─────────────────────────────────────────
- [m] Atur Model  [n] Reset  [Enter] OK  [q] Batal
-```
+  OpenCode v2.0.19 · Termux Edition
 
-### Navigasi Praktis di Layar HP:
-- **Toggle Skill**: Tekan angka `1` sampai `9` atau `0` (atau `Space`).
-- **Atur Model AI**: Tekan **`m`** untuk membuka wizard konfigurasi provider (Claude, OpenAI, Gemini, 9router/custom).
-- **Pilih Semua**: Tekan **`a`**.
-- **Kosongkan Semua (Vanilla)**: Tekan **`n`**.
-- **Simpan**: Tekan **`Enter`**.
+  Pilih skill internal yang ingin diaktifkan:
+
+  › ●  1. sec-audit         Audit & Celah Keamanan
+    ●  2. logic-trainer     Latihan Logika & Fallacy
+    ●  3. complex-logic     C.A.R.V.E. Reasoning
+    ●  4. ui-ux             Modern UI/UX Design
+    ●  5. backend-api       REST API & Queues
+    ●  6. perf-optimizer    Performa & Memori
+    ●  7. code-refactor     Clean Code & Refactor
+    ●  8. code-reconstruct  Deobfuscate & AST
+    ●  9. git-workflow      Auto Git & Changelog
+    ●  0. db-optimizer      SQL & Index Tuning
+  ─────────────────────────────────────────
+  Navigasi: [↑/↓] · [Space/1-0] Toggle · [m] Model
+  Terapkan: [Enter] Simpan · [a] Semua · [n] Kosong · [q] Batal
+```
 
 ---
 
-## 🤖 Wizard Pemilihan Model AI (`[m]`)
+## 🤖 Konfigurasi Model AI (`[m]`)
 
-Tekan `m` di menu untuk memilih provider dan memasukkan API key secara otomatis:
+Tekan **`m`** untuk memilih provider dan memasukkan API key:
 
 ```
-┌── Konfigurasi Model AI (OpenCode) ─────┐
-│ Pilih provider/model yang ingin dipakai │
-└────────────────────────────────────────┘
+  OpenCode v2.0.19 · Model & Provider Setup
 
-  1. Anthropic Claude  (claude-3-7-sonnet)
-  2. OpenAI            (gpt-4o / gpt-5)
-  3. Google Gemini     (gemini-2.5-pro / flash)
-  4. OpenRouter        (multi-provider)
-  5. 9router / Custom  (custom baseURL & model)
-  0. Kembali ke Menu Skill
+  Pilih provider LLM default:
+
+   1. Anthropic Claude  (claude-3-7-sonnet)
+   2. OpenAI            (gpt-4o / gpt-5)
+   3. Google Gemini     (gemini-2.5-pro / flash)
+   4. OpenRouter        (multi-provider proxy)
+   5. 9router / Custom  (custom baseURL & model)
+   0. Kembali ke Menu Skill
 ```
 
-Konfigurasi dan API key otomatis disimpan ke `~/.config/opencode/opencode.json` sehingga OpenCode siap dipakai seketika.
+Konfigurasi otomatis tersimpan ke `~/.config/opencode/opencode.json` dan siap digunakan seketika.
 
 ---
 
-## 🧠 Ringkasan 10 Skill Internal
+## 🚀 Menjalankan OpenCode
 
-| No | Command | Fungsi & Fokus Utama |
-|:--:|---|---|
-| 1 | `user:sec-audit` | Audit keamanan statis (SAST), attack surface mapping, cek IDOR/injection, dan patch mitigasi. |
-| 2 | `user:logic-trainer` | Pelatih logika Socratic interaktif (ronde bedah premis-asumsi, jebakan if-then, deduksi puzzle). |
-| 3 | `user:complex-logic` | Penalaran deduktif multi-variabel dengan protokol **C.A.R.V.E.** (*Compress, Anchor, Reverse, Visualize, Execute*). |
-| 4 | `user:ui-ux` | Arsitektur UI modern anti-slop, kontras WCAG AAA, dark theme slate/zinc, dan responsive fluid. |
-| 5 | `user:backend-api` | Desain kontrak API produksi, header `Idempotency-Key`, task queue retry backoff, dan DLQ. |
-| 6 | `user:perf-optimizer` | Profiling hot-path, latensi I/O non-blocking, memori zero-copy, dan eliminasi lock contention. |
-| 7 | `user:code-refactor` | Refactoring bedah zero-regression, decoupling modular (SRP/SoC), dan arsitektur type-safe. |
-| 8 | `user:code-reconstruct` | Rekonstruksi kode minified/terdistorsi, deobfuscation, dan normalisasi struktur AST. |
-| 9 | `user:git-workflow` | Partisi staging diff atomik, Conventional Commits berkualitas, dan auto changelog generator. |
-| 10 | `user:db-optimizer` | Analisis query cost (`EXPLAIN ANALYZE`), composite indexing, dan eliminasi N+1 ORM query. |
+```bash
+cd ~/my-project
+opencode
+```
 
----
-
-## 🚀 Cara Menjalankan
-
-1. Masuk ke folder project:
-   ```bash
-   cd ~/my-project
-   ```
-2. Jalankan OpenCode:
-   ```bash
-   opencode
-   ```
-3. Tekan **`Ctrl + K`** dan pilih skill yang diinginkan (misal: `user:logic-trainer` atau `user:sec-audit`).
+Tekan **`Ctrl + K`** di dalam antarmuka OpenCode untuk memanggil skill yang telah diaktifkan.
