@@ -176,8 +176,8 @@ render_menu() {
     [ "$DIVIDER_LEN" -lt 30 ] && DIVIDER_LEN=35
     DIVIDER=$(printf '─%.0s' $(seq 1 $DIVIDER_LEN))
     echo -e "  ${C_DIM}$DIVIDER${C_RESET}"
-    echo -e "  ${C_DIM}Navigasi:${C_RESET} ${C_WHITE}[↑/↓]${C_RESET} · ${C_WHITE}[Space/1-0]${C_RESET} Toggle · ${C_CYAN}[m]${C_RESET} Model"
-    echo -e "  ${C_DIM}Terapkan:${C_RESET} ${C_GREEN}[Enter]${C_RESET} Simpan · ${C_WHITE}[a]${C_RESET} Semua · ${C_DIM}[n] Kosong · [q] Batal${C_RESET}"
+    echo -e "  ${C_DIM}Kontrol:${C_RESET} ${C_WHITE}[↑/↓]${C_RESET} Geser · ${C_WHITE}[Space/1-0]${C_RESET} Toggle · ${C_CYAN}[m]${C_RESET} Model"
+    echo -e "  ${C_DIM}Aksi:   ${C_RESET} ${C_GREEN}[Enter]${C_RESET} Simpan · ${C_WHITE}[a]${C_RESET} Semua · ${C_DIM}[n] Reset · [q] Batal${C_RESET}"
 }
 
 configure_model() {
