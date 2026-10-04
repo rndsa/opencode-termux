@@ -60,9 +60,17 @@ if [ "$ARCH" != "aarch64" ]; then
     exit 1
 fi
 
-echo -e "${C_CYAN}[1/4]${C_RESET} Memeriksa dan memperbarui dependensi sistem (ripgrep, curl)..."
-pkg update -y > /dev/null 2>&1 || true
-pkg install -y curl ripgrep > /dev/null 2>&1
+echo -e "${C_CYAN}[1/4]${C_RESET} Memeriksa dependensi sistem (curl, ripgrep)..."
+MISSING_PKGS=()
+command -v curl >/dev/null 2>&1 || MISSING_PKGS+=("curl")
+command -v rg >/dev/null 2>&1 || MISSING_PKGS+=("ripgrep")
+
+if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+    echo -e "${C_DIM}    Memasang dependensi: ${MISSING_PKGS[*]}...${C_RESET}"
+    pkg install -y -o Dpkg::Options::="--force-confold" "${MISSING_PKGS[@]}" || true
+else
+    echo -e "${C_GREEN}    ✓ Dependensi sudah lengkap, lewati tahap ini.${C_RESET}"
+fi
 
 DEB_URL="https://github.com/Konaimav2/opencode-termux/releases/download/v2.0.19-android-rc4/opencode_2.0.19_aarch64.deb"
 DEB_FILE="/data/data/com.termux/files/usr/tmp/opencode_installer.deb"
